@@ -7,10 +7,12 @@ Widget JavaScript embeddabile per l'area riservata Uniwix. Fornisce una chat int
 Basta aggiungere **una riga** all'HTML dell'area riservata, prima del tag `</body>`:
 
 ```html
-<script src="https://mihaimoraru.github.io/uniwix-chatbot-widget/widget.js"></script>
+<script src="https://mihai-mm.github.io/uniwix-chatbot-widget/widget.js"></script>
 ```
 
 Niente altro. Il widget si carica, si inizializza e appare un pulsante blu in basso a destra.
+
+Demo live: https://mihai-mm.github.io/uniwix-chatbot-widget/
 
 ## Cosa fa
 
@@ -35,7 +37,7 @@ Per associare la chat all'utente autenticato di UnoERP (e non al browser):
 
 ```html
 <script
-  src="https://mihaimoraru.github.io/uniwix-chatbot-widget/widget.js"
+  src="https://mihai-mm.github.io/uniwix-chatbot-widget/widget.js"
   data-user-id="<?= $current_user_id ?>"
 ></script>
 ```
@@ -76,7 +78,7 @@ Uniwix scarica `widget.js` e lo mette sul proprio server. Lo include con:
 
 ### Opzione 2: GitHub Pages (attuale)
 ```html
-<script src="https://mihaimoraru.github.io/uniwix-chatbot-widget/widget.js"></script>
+<script src="https://mihai-mm.github.io/uniwix-chatbot-widget/widget.js"></script>
 ```
 **Vantaggi:** zero setup, auto-deploy ad ogni push, gratis.
 **Svantaggi:** dipendenza da GitHub Pages uptime (≈99.9%).
