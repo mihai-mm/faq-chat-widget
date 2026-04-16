@@ -14,6 +14,7 @@
       --muted: #6B7280;
       --success: #10B981;
       --ok: #059669;
+      --danger: #DC2626;
     }
     * { box-sizing: border-box; }
     body {
@@ -57,8 +58,9 @@
     .col-num { width: 40px; color: var(--muted); font-weight: 600; }
     .col-area { width: 140px; }
     .col-area strong { color: var(--primary); }
+    .col-area em { color: var(--muted); font-style: normal; font-size: 12px; }
     .col-domanda { min-width: 220px; }
-    .col-prova { width: 90px; text-align: center; }
+    .col-prova { width: 110px; text-align: center; }
     .col-qualita { width: 160px; }
     .col-note { width: 260px; }
     .col-status { width: 80px; text-align: center; }
@@ -69,6 +71,14 @@
       cursor: pointer; transition: background 0.15s;
     }
     .prova-btn:hover { background: #164a94; }
+
+    .remove-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 4px 10px; border-radius: 6px;
+      font-size: 12px; cursor: pointer; margin-top: 6px; display: block; width: 100%;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .remove-btn:hover { border-color: var(--danger); color: var(--danger); }
 
     select.qualita-input, textarea.note-input {
       width: 100%; border: 1px solid var(--border); border-radius: 6px;
@@ -97,6 +107,46 @@
     .connection-status.ok { background: #D1FAE5; color: var(--ok); }
     .connection-status.error { background: #FEE2E2; color: #B91C1C; }
 
+    .add-question {
+      margin: 28px 0 32px;
+      background: white;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    .add-question h2 {
+      margin: 0 0 6px; font-size: 16px;
+    }
+    .add-question p {
+      color: var(--muted); font-size: 13px; margin: 0 0 12px;
+    }
+    .add-question textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; font-family: inherit; font-size: 14px; color: var(--dark);
+      resize: vertical; min-height: 56px; margin-bottom: 10px;
+    }
+    .add-question textarea:focus {
+      outline: none; border-color: var(--primary);
+    }
+    .add-question .row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .add-question button {
+      background: var(--primary); color: white; border: none;
+      padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .add-question button:hover:not(:disabled) { background: #164a94; }
+    .add-question button:disabled { background: #9CA3AF; cursor: not-allowed; }
+    .add-question .char-count {
+      color: var(--muted); font-size: 12px;
+    }
+    .add-question .add-status {
+      font-size: 12px; font-weight: 600;
+    }
+    .add-question .add-status.error { color: var(--danger); }
+    .add-question .add-status.ok { color: var(--ok); }
+
     footer {
       margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);
       font-size: 13px; color: var(--muted);
@@ -110,7 +160,7 @@
 </head>
 <body>
   <h1>Demo Widget Chatbot UnoERP</h1>
-  <p class="lead">Prova le 9 domande di riferimento e lascia la tua valutazione. Le risposte vengono salvate automaticamente.</p>
+  <p class="lead">Prova le 9 domande di riferimento e lascia la tua valutazione. Puoi anche aggiungere domande tue. Le risposte vengono salvate automaticamente.</p>
 
   <div class="intro">
     <strong>Come usare questa pagina:</strong>
@@ -118,6 +168,7 @@
       <li>Clicca <strong>Prova</strong> per inviare la domanda al chatbot (si apre in basso a destra)</li>
       <li>Seleziona la qualità della risposta nel menu a tendina</li>
       <li>Scrivi eventuali note nel campo a destra</li>
+      <li>Se ti vengono in mente altre domande, aggiungile dal box sotto la tabella</li>
       <li>Tutto viene salvato automaticamente, puoi chiudere e tornare in qualsiasi momento</li>
     </ul>
   </div>
@@ -139,6 +190,17 @@
     <tbody id="feedback-tbody"></tbody>
   </table>
 
+  <div class="add-question">
+    <h2>Aggiungi una tua domanda</h2>
+    <p>Scrivi una domanda da testare. Viene salvata e aggiunta alla tabella con pulsante "Prova" e valutazione, come le altre.</p>
+    <textarea id="new-question-input" placeholder="Scrivi qui la domanda da testare..." maxlength="500"></textarea>
+    <div class="row">
+      <button id="add-question-btn" disabled>Aggiungi alla tabella</button>
+      <span class="char-count" id="char-count">0 / 500</span>
+      <span class="add-status" id="add-status"></span>
+    </div>
+  </div>
+
   <footer>
     Widget in fase di testing - feedback condiviso con Mihai via Supabase. Per problemi o domande: <strong>mihai@onesecagent.com</strong>.
   </footer>
@@ -153,7 +215,7 @@
       const SUPABASE_ANON_KEY = 'sb_publishable_7O54tZmMjdkB3v0laXK3fQ_HAkFu6js';
       const USER_IDENTIFIER = 'giulio';
 
-      const DOMANDE = [
+      const DOMANDE_FISSE = [
         { id: 1, area: 'Fatture scartate', testo: 'Questa fattura è stata scartata ma non ne comprendo il motivo' },
         { id: 2, area: 'Cespiti', testo: 'Cespiti: il costo storico si è ridotto per la dismissione del cespite, ma non è avvenuta alcuna modifica del fondo di ammortamento' },
         { id: 3, area: 'Modalità pagamento', testo: 'Come si crea una nuova modalità di pagamento?' },
@@ -164,6 +226,8 @@
         { id: 8, area: 'Fatture estere', testo: 'Modifica integrazioni e fatture estere' },
         { id: 9, area: 'Ritenute d\'acconto', testo: 'Calcolo errato su Ritenute d\'acconto' }
       ];
+
+      let DOMANDE_CUSTOM = [];
 
       const QUALITA_OPZIONI = ['', 'Ottima', 'Buona', 'Sufficiente', 'Insufficiente', 'Nessuna risposta'];
       const QUALITA_CLASS = {
@@ -178,30 +242,46 @@
       const saveTimers = new Map();
 
       function escapeHtml(s) {
-        return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      }
+
+      function getAllDomande() {
+        return [...DOMANDE_FISSE, ...DOMANDE_CUSTOM];
       }
 
       function renderTable() {
         const tbody = document.getElementById('feedback-tbody');
-        tbody.innerHTML = DOMANDE.map(d => `
-          <tr data-id="${d.id}">
-            <td class="col-num">${d.id}</td>
-            <td class="col-area"><strong>${escapeHtml(d.area)}</strong></td>
-            <td class="col-domanda">${escapeHtml(d.testo)}</td>
-            <td class="col-prova"><button class="prova-btn" data-id="${d.id}">Prova</button></td>
-            <td class="col-qualita">
-              <select class="qualita-input" data-id="${d.id}">
-                ${QUALITA_OPZIONI.map(q => `<option value="${q}">${q || '— seleziona —'}</option>`).join('')}
-              </select>
-            </td>
-            <td class="col-note">
-              <textarea class="note-input" data-id="${d.id}" placeholder="Eventuali note..." maxlength="2000"></textarea>
-            </td>
-            <td class="col-status">
-              <span class="save-status" data-id="${d.id}"></span>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = getAllDomande().map((d, idx) => {
+          const num = idx + 1;
+          const area = d.isCustom
+            ? '<em>Personalizzata</em>'
+            : `<strong>${escapeHtml(d.area)}</strong>`;
+          const removeBtn = d.isCustom
+            ? `<button class="remove-btn" data-id="${d.id}">Rimuovi</button>`
+            : '';
+          return `
+            <tr data-id="${d.id}">
+              <td class="col-num">${num}</td>
+              <td class="col-area">${area}</td>
+              <td class="col-domanda">${escapeHtml(d.testo)}</td>
+              <td class="col-prova">
+                <button class="prova-btn" data-id="${d.id}">Prova</button>
+                ${removeBtn}
+              </td>
+              <td class="col-qualita">
+                <select class="qualita-input" data-id="${d.id}">
+                  ${QUALITA_OPZIONI.map(q => `<option value="${q}">${q || '— seleziona —'}</option>`).join('')}
+                </select>
+              </td>
+              <td class="col-note">
+                <textarea class="note-input" data-id="${d.id}" placeholder="Eventuali note..." maxlength="2000"></textarea>
+              </td>
+              <td class="col-status">
+                <span class="save-status" data-id="${d.id}"></span>
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
 
       function applyRowColor(id, qualita) {
@@ -229,8 +309,20 @@
           const { data, error } = await supabase
             .from('faq_feedback')
             .select('*')
-            .eq('user_identifier', USER_IDENTIFIER);
+            .eq('user_identifier', USER_IDENTIFIER)
+            .order('domanda_id', { ascending: true });
           if (error) throw error;
+
+          DOMANDE_CUSTOM = (data || [])
+            .filter(row => row.domanda_id > 9 && row.domanda_testo)
+            .map(row => ({
+              id: row.domanda_id,
+              testo: row.domanda_testo,
+              isCustom: true
+            }));
+
+          renderTable();
+
           (data || []).forEach(row => {
             const qsel = document.querySelector(`select.qualita-input[data-id="${row.domanda_id}"]`);
             const note = document.querySelector(`textarea.note-input[data-id="${row.domanda_id}"]`);
@@ -238,6 +330,7 @@
             if (note) note.value = row.note || '';
             applyRowColor(row.domanda_id, row.qualita);
           });
+
           conn.className = 'connection-status ok';
           conn.textContent = 'Database connesso - le tue risposte vengono salvate automaticamente';
         } catch (err) {
@@ -250,6 +343,9 @@
       async function saveFeedback(id) {
         const qsel = document.querySelector(`select.qualita-input[data-id="${id}"]`);
         const note = document.querySelector(`textarea.note-input[data-id="${id}"]`);
+        if (!qsel || !note) return;
+
+        const custom = DOMANDE_CUSTOM.find(d => d.id === id);
         const payload = {
           domanda_id: id,
           qualita: qsel.value || null,
@@ -257,6 +353,10 @@
           user_identifier: USER_IDENTIFIER,
           updated_at: new Date().toISOString()
         };
+        if (custom) {
+          payload.domanda_testo = custom.testo;
+        }
+
         showStatus(id, 'saving', 'Salvataggio...');
         try {
           const { error } = await supabase
@@ -275,32 +375,125 @@
         saveTimers.set(id, setTimeout(() => saveFeedback(id), 600));
       }
 
+      async function addCustomQuestion(testo) {
+        const trimmed = testo.trim();
+        if (trimmed.length < 5 || trimmed.length > 500) return;
+
+        const addStatus = document.getElementById('add-status');
+        const addBtn = document.getElementById('add-question-btn');
+        addBtn.disabled = true;
+        addStatus.className = 'add-status';
+        addStatus.textContent = 'Salvataggio...';
+
+        const newId = Math.floor(Date.now() / 1000);
+
+        try {
+          const { error } = await supabase
+            .from('faq_feedback')
+            .insert({
+              domanda_id: newId,
+              domanda_testo: trimmed,
+              user_identifier: USER_IDENTIFIER
+            });
+          if (error) throw error;
+
+          DOMANDE_CUSTOM.push({ id: newId, testo: trimmed, isCustom: true });
+          renderTable();
+
+          document.getElementById('new-question-input').value = '';
+          updateCharCount();
+          addStatus.className = 'add-status ok';
+          addStatus.textContent = 'Domanda aggiunta';
+          setTimeout(() => { addStatus.textContent = ''; addStatus.className = 'add-status'; }, 2000);
+
+          const newRow = document.querySelector(`tr[data-id="${newId}"]`);
+          if (newRow) newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (err) {
+          console.error(err);
+          addStatus.className = 'add-status error';
+          addStatus.textContent = 'Errore: ' + (err.message || err);
+        } finally {
+          addBtn.disabled = document.getElementById('new-question-input').value.trim().length < 5;
+        }
+      }
+
+      async function removeCustomQuestion(id) {
+        const custom = DOMANDE_CUSTOM.find(d => d.id === id);
+        if (!custom) return;
+        const conferma = confirm(`Rimuovere la domanda "${custom.testo.slice(0, 60)}${custom.testo.length > 60 ? '…' : ''}"?\n\nVerranno rimossi anche qualità e note associate.`);
+        if (!conferma) return;
+
+        try {
+          const { error } = await supabase
+            .from('faq_feedback')
+            .delete()
+            .eq('domanda_id', id)
+            .eq('user_identifier', USER_IDENTIFIER);
+          if (error) throw error;
+
+          DOMANDE_CUSTOM = DOMANDE_CUSTOM.filter(d => d.id !== id);
+          renderTable();
+        } catch (err) {
+          console.error(err);
+          alert('Errore durante la rimozione: ' + (err.message || err));
+        }
+      }
+
+      function updateCharCount() {
+        const input = document.getElementById('new-question-input');
+        const counter = document.getElementById('char-count');
+        const btn = document.getElementById('add-question-btn');
+        const len = input.value.trim().length;
+        counter.textContent = `${input.value.length} / 500`;
+        btn.disabled = len < 5 || len > 500;
+      }
+
       function bindEvents() {
-        document.getElementById('feedback-tbody').addEventListener('click', e => {
-          const btn = e.target.closest('.prova-btn');
-          if (!btn) return;
-          const id = parseInt(btn.dataset.id, 10);
-          const domanda = DOMANDE.find(d => d.id === id);
-          if (domanda && window.UniwixChat) {
-            window.UniwixChat.sendMessage(domanda.testo);
+        const tbody = document.getElementById('feedback-tbody');
+
+        tbody.addEventListener('click', e => {
+          const prova = e.target.closest('.prova-btn');
+          if (prova) {
+            const id = parseInt(prova.dataset.id, 10);
+            const domanda = getAllDomande().find(d => d.id === id);
+            if (domanda && window.UniwixChat) {
+              window.UniwixChat.sendMessage(domanda.testo);
+            }
+            return;
+          }
+          const remove = e.target.closest('.remove-btn');
+          if (remove) {
+            removeCustomQuestion(parseInt(remove.dataset.id, 10));
           }
         });
-        document.getElementById('feedback-tbody').addEventListener('change', e => {
+        tbody.addEventListener('change', e => {
           if (e.target.classList.contains('qualita-input')) {
             const id = parseInt(e.target.dataset.id, 10);
             applyRowColor(id, e.target.value);
             saveFeedback(id);
           }
         });
-        document.getElementById('feedback-tbody').addEventListener('input', e => {
+        tbody.addEventListener('input', e => {
           if (e.target.classList.contains('note-input')) {
             debounceSave(parseInt(e.target.dataset.id, 10));
           }
         });
+
+        const input = document.getElementById('new-question-input');
+        const btn = document.getElementById('add-question-btn');
+        input.addEventListener('input', updateCharCount);
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            if (!btn.disabled) addCustomQuestion(input.value);
+          }
+        });
+        btn.addEventListener('click', () => addCustomQuestion(input.value));
       }
 
       renderTable();
       bindEvents();
+      updateCharCount();
       loadFeedback();
     })();
   </script>
