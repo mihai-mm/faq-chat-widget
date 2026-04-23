@@ -171,13 +171,7 @@
       .header-text { flex: 1; min-width: 0; }
       .header-text h3 { margin: 0; font-size: 15px; font-weight: 600; }
       .header-text p { margin: 2px 0 0; font-size: 12px; opacity: 0.75; display: flex; align-items: center; gap: 6px; }
-      .session-chip {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 10px; letter-spacing: 0.02em;
-        padding: 1px 6px; border-radius: 4px;
-        background: rgba(255,255,255,0.12);
-        opacity: 0.9;
-      }
+
       .header-actions { display: flex; gap: 4px; }
       .icon-btn {
         background: transparent; border: none; color: ${c.white};
@@ -313,7 +307,7 @@
         <div class="header">
           <div class="header-text">
             <h3>${CONFIG.title}</h3>
-            <p><span class="subtitle-text">${CONFIG.subtitle}</span><span class="session-chip">#${shortId()}</span></p>
+            <p><span class="subtitle-text">${CONFIG.subtitle}</span></p>
           </div>
           <div class="header-actions">
             <button class="icon-btn reset-btn" aria-label="Nuova conversazione" title="Nuova conversazione">
@@ -457,8 +451,6 @@
   }
 
   function updateSessionChip() {
-    const chip = shadowRoot.querySelector('.session-chip');
-    if (chip) chip.textContent = '#' + shortId();
   }
 
   function resetConversation() {
