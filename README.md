@@ -31,23 +31,27 @@ Demo live: https://mihai-mm.github.io/faq-chat-widget/
 
 Il widget è pre-configurato per collegarsi al backend chatbot di Uniwix. Non serve alcuna configurazione aggiuntiva per il funzionamento base.
 
-### Configurazione avanzata (per produzione)
+### Tracking utenti (consigliato in produzione)
 
-Per associare la chat all'utente autenticato di UnoERP (e non al browser):
+Per associare ogni messaggio all'utente autenticato di UnoERP, prima del tag script del widget iniettare la variabile globale `window.UNIWIX_CHAT_CONTEXT`:
 
 ```html
-<script
-  src="https://mihai-mm.github.io/faq-chat-widget/widget.js"
-  data-user-id="<?= $current_user_id ?>"
-></script>
+<script>
+  window.UNIWIX_CHAT_CONTEXT = {
+    community_address: "<?= $community_address ?>",
+    local_user: "<?= $local_user ?>"
+  };
+</script>
+<script src="https://mihai-mm.github.io/faq-chat-widget/widget.js" defer></script>
 ```
 
-Vantaggi di passare l'userId:
-- **Multi-device**: utente cambia computer, ritrova la sua conversazione
-- **Computer condiviso**: utenti diversi vedono chat diverse, zero leak
-- **Cronologia stabile**: il backend ricorda tutto lo storico di quell'utente
+A ogni messaggio inviato, il widget legge la variabile e passa i due campi al backend nel body POST. I valori vengono salvati in Supabase (tabella `query_log`) per ogni turno utente.
 
-Se `data-user-id` non è presente, il widget genera un ID random legato al browser (modalità dev).
+Il widget è **graceful**:
+- Se `UNIWIX_CHAT_CONTEXT` non è presente, il chatbot funziona comunque e i due campi vengono salvati come `null` (utente non identificato).
+- Il widget rilegge la variabile a ogni invio, quindi può essere iniettata anche dopo il caricamento del widget (es. SPA con context async).
+
+**Tipi accettati**: `community_address` deve essere stringa non vuota; `local_user` può essere stringa o numero (es. `30001`), viene normalizzato a stringa.
 
 ## Come si comporta il chatbot
 

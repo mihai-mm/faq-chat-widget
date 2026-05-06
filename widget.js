@@ -2,7 +2,7 @@
   'use strict';
 
   const CONFIG = {
-    webhookUrl: 'https://n8n.srv1389970.hstgr.cloud/webhook/9eeb6c3f-98aa-4e38-b92b-6ef6d64ffed2/chat',
+    webhookUrl: 'https://n8n.srv1648209.hstgr.cloud/webhook/9eeb6c3f-98aa-4e38-b92b-6ef6d64ffed2/chat',
     title: 'Assistente UnoERP',
     subtitle: 'Come posso aiutarti?',
     placeholder: 'Scrivi qui la tua domanda...',
@@ -120,6 +120,20 @@
 
   function currentTime() {
     return new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function readChatContext() {
+    const ctx = window.UNIWIX_CHAT_CONTEXT;
+    if (!ctx || typeof ctx !== 'object') {
+      return { community_address: null, local_user: null };
+    }
+    const ca = typeof ctx.community_address === 'string' && ctx.community_address.trim()
+      ? ctx.community_address.trim()
+      : null;
+    const lu = ctx.local_user != null && (typeof ctx.local_user === 'string' || typeof ctx.local_user === 'number')
+      ? String(ctx.local_user).trim() || null
+      : null;
+    return { community_address: ca, local_user: lu };
   }
 
   function createStyles() {
@@ -424,13 +438,16 @@
     const typingEl = addTyping();
 
     try {
+      const ctx = readChatContext();
       const res = await fetch(CONFIG.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'sendMessage',
           chatInput: text,
-          sessionId: sessionId
+          sessionId: sessionId,
+          community_address: ctx.community_address,
+          local_user: ctx.local_user
         })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
